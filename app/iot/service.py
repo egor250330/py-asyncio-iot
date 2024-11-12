@@ -26,13 +26,13 @@ class IOTService:
         self.devices: dict[str, Device] = {}
 
     async def register_device(self, device: Device) -> str:
-        device.connect()
-        device_id = generate_id()
+        await device.connect()
+        device_id = await generate_id()
         self.devices[device_id] = device
         return device_id
 
     async def unregister_device(self, device_id: str) -> None:
-        self.devices[device_id].disconnect()
+        await self.devices[device_id].disconnect()
         del self.devices[device_id]
 
     def get_device(self, device_id: str) -> Device:
@@ -40,10 +40,8 @@ class IOTService:
 
     async def run_program(self, program: list[Message]) -> None:
         print("=====RUNNING PROGRAM======")
-        for msg in program:
-            await self.send_msg(msg)
+        await asyncio.gather(*(self.send_msg(msg) for msg in program))
         print("=====END OF PROGRAM======")
 
     async def send_msg(self, msg: Message) -> None:
-        await asyncio.sleep(0)
-        self.devices[msg.device_id].send_message(msg.msg_type, msg.data)
+        await self.devices[msg.device_id].send_message(msg.msg_type, msg.data)
